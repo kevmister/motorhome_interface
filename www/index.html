@@ -7,7 +7,7 @@
   <style type="text/css">
     :root{
       --padding: 0.5rem;
-      --nav-height: 6rem;
+      --controls-height: 6rem;
       --dashboard-width: 20rem;
       --transition-speed: 0.5s;
       font-size: 20pt;
@@ -21,79 +21,88 @@
       overflow: hidden;
       background: #000;
     }
-    body.driving #dashboard{
-      left: calc(var(--dashboard-width) * -1);
-      transition: left var(--transition-speed);
-    }
-    body.driving #workspace{
-      width: calc(100vw - (var(--padding) * 2));
-      transition: width var(--transition-speed);
-    }
   </style>
 
   <style type="text/css"> /* DASHBOARD */
     #dashboard{
       position: absolute;
       left: var(--padding);
+      right: calc(100vw - var(--dashboard-width) + (var(--padding) * 1));
       top: var(--padding);
-      width: var(--dashboard-width);
-      height: calc(100vh - var(--nav-height) - (var(--padding) * 3));
+      bottom: calc(var(--controls-height));
+      padding: var(--padding);
       background: #eee;
       border-radius: var(--padding);
-      transition: left var(--transition-speed);
+      transform: translateY(0);
+      transition: transform var(--transition-speed);
+    }
+
+    body.parked #dashboard{
+      transform: translateX(calc((var(--dashboard-width) * -1) + var(--padding) ));
+      transition: transform var(--transition-speed);
     }
   </style>
 
   <style type="text/css"> /* WORKSPACE */
     #workspace{
       position: absolute;
+      left: calc(var(--dashboard-width) + (var(--padding) * 0));
       right: var(--padding);
       top: var(--padding);
-      width: calc(100vw - var(--dashboard-width) - (var(--padding) * 3));
-      height: calc(100vh - var(--nav-height) - (var(--padding) * 3));
+      bottom: calc(var(--controls-height));
+      padding: var(--padding);
       background: #eee;
       border-radius: var(--padding);
-      transition: width var(--transition-speed);
+      transition: left var(--transition-speed);
+    }
+
+    body.parked #workspace{
+      left: var(--padding);
+      transition: left var(--transition-speed);
     }
   </style>
   </style>
-  <style type="text/css"> /* NAVIGATION */
-    #nav{
+  <style type="text/css"> /* NAVIGATION BUTTONS */
+    #controls{
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: var(--nav-height);
+      left: var(--padding);
+      right: var(--padding);
+      top: calc(100vh - var(--controls-height));
+      bottom: var(--padding);
+      padding: calc(var(--padding)*2);
       background: #000;
     }
-    #nav .option.start{
+    #controls .option.start{
       border-left: 1pt solid #ccc;
+      margin-left: calc(var(--padding) / 2);
     }
-    #nav .option.end{
+    #controls .option.end{
       border-right: 1pt solid #ccc;
+      margin-right: calc(var(--padding) / 2);
     }
-    #nav .option{
-      width: calc(var(--nav-height) - var(--padding)*2);
-      height: calc(var(--nav-height) - var(--padding)*2);
+    #controls .option{
+      width: 4.5rem;
+      height: 100%;
       border-radius: var(--padding);
+      padding: 0 var(--padding);
       color: #eee;
       display: inline-grid;
       grid-template-areas: "upper" "title" "lower";
       grid-template-rows: 1fr 1fr 1fr;
       font-size: 0.6rem;
     }
-    #nav .upper{
+    #controls .upper{
       grid-area: upper;
     }
-    #nav .title{
+    #controls .title{
       grid-area: title;
     }
-    #nav .lower{
+    #controls .lower{
       grid-area: lower;
     }
-    #nav .upper,
-    #nav .title,
-    #nav .lower{
+    #controls .upper,
+    #controls .title,
+    #controls .lower{
       display: flex;
       align-items: center;
       justify-content: center;
@@ -111,7 +120,7 @@
     <div class="speedometer"></div>
   </div>
   <div id="workspace"></div>
-  <div id="nav">
+  <div id="controls">
     <div class="option start">
       <div class="upper"></div>
       <div class="title">LIGHTS</div>
@@ -156,7 +165,7 @@
 </body>
 <script type="text/javascript">
   setInterval(() => {
-    //document.querySelector('body').classList.toggle('driving')
+    //document.querySelector('body').classList.toggle('parked')
   }, 5000)
 </script>
 </html>

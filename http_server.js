@@ -11,16 +11,26 @@ const run  = async () => {
 
   app.use(express.static('www'))
 
-  wss.on('connection', async ws => {
+  wss.on('connection', async client => {
 
-    ws.on('message', async message => {})
+    console.info(`WebSocket: client connected`)
+    client.on('message', async message => {})
 
+    /*
     const
-      heartbeat = setInterval(() => connection.send('ping'), 30000)
+      heartbeat = setInterval(() => client.send('pinger'), 15000)
+    
 
-    ws.on('close', () => clearInterval(heartbeat))
-    ws.on('error', () => clearInterval(heartbeat))
+    //client.on('close', () => clearInterval(heartbeat))
+    //client.on('error', () => clearInterval(heartbeat))
+    */
   })
+
+  setInterval(() => {
+    for(const client of wss.clients)
+      if(client.readyState = ws.OPEN)
+        client.send(JSON.stringify({namespace: 'engine.data.oil_pressure', data: { value: Math.random()*250|0 }}))
+  }, 1000)
 
   server.listen(1974, () => console.info(`Server listening on port ${1974}`))
 }

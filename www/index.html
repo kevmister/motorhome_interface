@@ -129,10 +129,15 @@
     }
   </style>
   <style type="text/css">
+    #dashboard-grid{
+      position: absolute;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
     .gauge{
-      width: 4rem;
-      height: 4rem;
-      display: inline-block;
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
@@ -145,9 +150,13 @@
       <span id="speedometer-value">75</span>
       <span id="speedometer-unit">KM/H</span>
     </div>
-    <div class="gauge"></div>
-    <div class="gauge"></div>
-    <div class="gauge"></div>
+    <div id="dashboard-grid">
+      <div class="gauge"></div>
+      <div class="gauge"></div>
+      <div class="gauge"></div>
+      <div class="gauge"></div>
+      <div class="gauge"></div>
+    </div>
   </div>
   <div id="workspace"></div>
   <div id="controls">
@@ -215,11 +224,12 @@
     const
       display = {
         gauge: {
-          single: ({ element,title,min=0,max=1,threshold,unit }) => {
+          single: ({ element,title,min=0,max=1,step=10,digits=0,threshold,unit }) => {
             const
               width = 120,
               height = 120,
               range = max - min,
+              round = value => (Math.round(Math.round(value/step)*step*100000)/100000).toFixed(digits),
               convert = value => ((value - min) / range) * (Math.PI/0.75) - (Math.PI/1.5),
               svg = d3
                 .select(element)
@@ -231,7 +241,7 @@
                 .attr('transform', `translate(${width / 2},${height / 2})`),
               arc = d3.arc()
                 .innerRadius(40)
-                .outerRadius(60)
+                .outerRadius(55)
                 .startAngle(convert(min)),
               background = svg.append('path')
                 .datum({ endAngle: convert(max)})
@@ -239,12 +249,16 @@
                 .attr('d', arc),
               display = svg.append('path')
                 .datum({ endAngle: convert(min) })
-                .style('fill', '#01ce6b')
+                .style('fill', '#48cb8c')
+                .attr('d', arc),
+              bar = svg.append('path')
+                .datum({ endAngle: convert(min)+0.01})
+                .style('fill', '#555')
                 .attr('d', arc),
               text  = svg.append('text')
                 .attr('x', 0)
                 .attr('y', 5)
-                .attr('font-size', `${1.75-((`${max}`).length/7)}rem`)
+                .attr('font-size', `${1.75-((`${round(max)}`).length/7)}rem`)
                 .attr('value', min)
                 .text(min)
                 .attr('text-anchor', 'middle'),
@@ -268,7 +282,7 @@
 
                     text
                       .attr('value', result)
-                      .text(Math.round(result))
+                      .text(round(result))
                   }
                 }
               },
@@ -281,10 +295,13 @@
                   .duration(duration)
                   .tween("text", tween.text(value))
 
-                if(threshold && ((threshold.above && value > threshold.above) || (threshold.below && value < threshold.below)))
+                if(threshold && ((threshold.above && value > threshold.above) || (threshold.below && value < threshold.below))){
                   display.style('fill', 'red')
-                else
-                  display.style('fill', '#01ce6b')
+                  text.style('fill', 'red')
+                } else {
+                  display.style('fill', '#48cb8c')
+                  text.style('fill', 'inherit')
+                }
               }
 
             svg.append('text')
@@ -305,11 +322,12 @@
               update
             }
           },
-          double: ({ element,title,min=0,max=1,threshold,unit }) => {
+          double: ({ element,title,min=0,max=1,step=1,digits=0,threshold,unit }) => {
             const
               width = 120,
               height = 120,
               range = max - min,
+              round = value => (Math.round(Math.round(value/step)*step*100000)/100000).toFixed(digits),
               convert = value => ((value - min) / range) * (Math.PI/0.75) / 2,
               svg = d3
                 .select(element)
@@ -322,11 +340,11 @@
               arc = [
                 d3.arc()
                   .innerRadius(40)
-                  .outerRadius(60)
+                  .outerRadius(55)
                   .startAngle(0),
                 d3.arc()
                   .innerRadius(40)
-                  .outerRadius(60)
+                  .outerRadius(55)
                   .startAngle(0)
               ],
               background = [
@@ -342,12 +360,22 @@
               display = [
                 svg.append('path')
                   .datum({ startAngle: 0, endAngle: -convert(min) })
-                  .style('fill', '#01ce6b')
+                  .style('fill', '#48cb8c')
                   .attr('d', arc),
                 svg.append('path')
                   .datum({ startAngle: 0, endAngle: convert(min) })
-                  .style('fill', '#01ce6b')
+                  .style('fill', '#48cb8c')
                   .attr('d', arc)
+              ],
+              bar = [
+                svg.append('path')
+                  .datum({ endAngle: convert(min)+0.005})
+                  .style('fill', '#555')
+                  .attr('d', arc[0]),
+                svg.append('path')
+                  .datum({ endAngle: convert(min)+0.005})
+                  .style('fill', '#555')
+                  .attr('d', arc[1])
               ],
               text = [
                 svg.append('text')
@@ -360,7 +388,7 @@
                 svg.append('text')
                   .attr('x', 5)
                   .attr('y', 10)
-                  .attr('font-size', `${1.4-((`${max}`).length/7)}rem`)
+                  .attr('font-size', `${1.4-((`${round(max)}`).length/7)}rem`)
                   .attr('value', min)
                   .text(min)
                   .attr('text-anchor', 'middle')
@@ -385,7 +413,7 @@
 
                     text[number]
                       .attr('value', result)
-                      .text(Math.round(result))
+                      .text(round(result))
                   }
                 }
               },
@@ -409,15 +437,21 @@
               
 
                 if(threshold){
-                  if(threshold && ((threshold.above && values[0] > threshold.above) || (threshold.below && values[0] < threshold.below)))
+                  if(threshold && ((threshold.above && values[0] > threshold.above) || (threshold.below && values[0] < threshold.below))){
                     display[0].style('fill', 'red')
-                  else
-                    display[0].style('fill', '#01ce6b')
+                    text[0].style('fill', 'red')
+                  } else {
+                    display[0].style('fill', '#48cb8c')
+                    text[0].style('fill', 'inherit')
+                  }
 
-                  if(threshold && ((threshold.above && values[1] > threshold.above) || (threshold.below && values[1] < threshold.below)))
+                  if(threshold && ((threshold.above && values[1] > threshold.above) || (threshold.below && values[1] < threshold.below))){
                     display[1].style('fill', 'red')
-                  else
-                    display[1].style('fill', '#01ce6b')
+                    text[1].style('fill', 'red')
+                  } else {
+                    display[1].style('fill', '#48cb8c')
+                    text[1].style('fill', 'inherit')
+                  }
                 }
               }
 
@@ -466,24 +500,66 @@
         element: document.querySelectorAll('.gauge')[2],
         min: 0, 
         max: 250, 
-        unit: 'PSI', 
+        unit: 'PSI',
         threshold: {
           below: 50,
           above: 150
         }, 
         title: 'OIL PRESSURE'
       }),
-      update1 = () => gauge1.update({ values: [ Math.random()*150|0, Math.random()*150|0 ], duration: 8000 }),
-      update2 = () => gauge2.update({ values: [ Math.random()*100|0, Math.random()*100|0 ], duration: 20000}),
-      update3 = () => gauge3.update({ value: Math.random()*250|0, duration: 10000})
+      gauge4 = display.gauge.single({
+        element: document.querySelectorAll('.gauge')[3],
+        min: 0, 
+        max: 20, 
+        unit: 'V',
+        step: 0.1,
+        digits: 1,
+        threshold: {
+          below: 10,
+          above: 15
+        }, 
+        title: 'BATTERY VOLTAGE'
+      }),
+      gauge5 = display.gauge.single({
+        element: document.querySelectorAll('.gauge')[4],
+        min: 0, 
+        max: 150, 
+        unit: 'C',
+        threshold: {
+          above: 110
+        }, 
+        title: 'OIL TEMPERATURE'
+      }),
+      update1 = () => gauge1.update({ values: [ Math.random()*150|0, Math.random()*150|0 ], duration: 8000 / 10 }),
+      update2 = () => gauge2.update({ values: [ Math.random()*100|0, Math.random()*100|0 ], duration: 20000 / 10}),
+      update3 = () => gauge3.update({ value: Math.random()*250|0, duration: 10000 / 10}),
+      update4 = () => gauge4.update({ value: Math.random()*20|0, duration: 10000 / 10}),
+      update5 = () => gauge5.update({ value: Math.random()*150|0, duration: 10000 / 10})
 
 
-    setInterval(update1, 10000)
-    setInterval(update2, 30000)
-    setInterval(update3, 11000)
+      /*
+    setInterval(update1, 10000 / 10)
+    setInterval(update2, 30000 / 10)
+    setInterval(update3, 11000 / 10)
+    setInterval(update4, 11000 / 10)
+    */
 
     update1()
     update2()
     update3()
+    update4()
+    update5()
+</script>
+<script type="text/javascript">
+  const
+    connection = new WebSocket(`ws://${location.host}`)
+
+  connection.onmessage = message => {
+    const
+      { namespace,data } = JSON.parse(message.data)
+
+    if(namespace === 'engine.data.oil_pressure')
+      gauge3.update({ value: data.value })
+  }
 </script>
 </html>

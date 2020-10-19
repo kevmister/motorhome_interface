@@ -9,6 +9,7 @@
     :root{
       --padding: 0.5rem;
       --controls-height: 6rem;
+      --controls-quick-width: 40rem;
       --dashboard-width: 20rem;
       --transition-speed: 0.5s;
       font-size: 20pt;
@@ -127,6 +128,23 @@
       border-radius: var(--padding);
       padding: var(--padding);
     }
+    #controls .option .quick{
+      position: absolute;
+      bottom: var(--controls-height);
+      left: calc((100vw - var(--controls-quick-width)) / 2);
+      width: var(--controls-quick-width);
+      height: 10rem;
+      border-radius: var(--padding);
+      background: #eee;
+      box-shadow: 0 0 var(--padding) #000a;
+      transform-origin: bottom center;
+      transform: scale(0);
+      -transition: transform calc(var(--transition-speed) / 4);
+    }
+    #controls .option .quick.open{
+      transform: scale(1);
+      -transition: transform calc(var(--transition-speed) / 1);
+    }
   </style>
   <style type="text/css">
     #dashboard-grid{
@@ -164,41 +182,49 @@
       <div class="upper"></div>
       <div class="title">LIGHTS</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option">
       <div class="upper"></div>
       <div class="title">WIPERS</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option">
       <div class="upper"></div>
       <div class="title">CRUISE</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option end">
       <div class="upper"></div>
       <div class="title">SUSPENSION</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option start">
       <div class="upper"></div>
       <div class="title">HVAC</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option end">
       <div class="upper"></div>
       <div class="title">MUSIC</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option start">
       <div class="upper"></div>
       <div class="title">TV</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
     <div class="option end">
       <div class="upper"></div>
       <div class="title">HOME</div>
       <div class="lower"></div>
+      <div class="quick"></div>
     </div>
   </div>
 </body>
@@ -251,10 +277,12 @@
                 .datum({ endAngle: convert(min) })
                 .style('fill', '#48cb8c')
                 .attr('d', arc),
+              /*
               bar = svg.append('path')
                 .datum({ endAngle: convert(min)+0.01})
                 .style('fill', '#555')
                 .attr('d', arc),
+              */
               text  = svg.append('text')
                 .attr('x', 0)
                 .attr('y', 5)
@@ -296,8 +324,8 @@
                   .tween("text", tween.text(value))
 
                 if(threshold && ((threshold.above && value > threshold.above) || (threshold.below && value < threshold.below))){
-                  display.style('fill', 'red')
-                  text.style('fill', 'red')
+                  display.style('fill', '#ff2c2c')
+                  text.style('fill', '#ff2c2c')
                 } else {
                   display.style('fill', '#48cb8c')
                   text.style('fill', 'inherit')
@@ -306,16 +334,16 @@
 
             svg.append('text')
               .attr('x', 0)
-              .attr('y', 25)
+              .attr('y', 22)
               .attr('text-anchor', 'middle')
-              .attr('font-size', '0.4rem')
+              .attr('font-size', '0.5rem')
               .text(unit)
 
             svg.append('text')
               .attr('x', 0)
-              .attr('y', 45)
+              .attr('y', 36)
               .attr('text-anchor', 'middle')
-              .attr('font-size', '0.4rem')
+              .attr('font-size', '0.3rem')
               .text(title)
 
             return {
@@ -367,6 +395,7 @@
                   .style('fill', '#48cb8c')
                   .attr('d', arc)
               ],
+              /*
               bar = [
                 svg.append('path')
                   .datum({ endAngle: convert(min)+0.005})
@@ -377,6 +406,7 @@
                   .style('fill', '#555')
                   .attr('d', arc[1])
               ],
+              */
               text = [
                 svg.append('text')
                   .attr('x', -5)
@@ -438,16 +468,16 @@
 
                 if(threshold){
                   if(threshold && ((threshold.above && values[0] > threshold.above) || (threshold.below && values[0] < threshold.below))){
-                    display[0].style('fill', 'red')
-                    text[0].style('fill', 'red')
+                    display[0].style('fill', '#ff2c2c')
+                    text[0].style('fill', '#ff2c2c')
                   } else {
                     display[0].style('fill', '#48cb8c')
                     text[0].style('fill', 'inherit')
                   }
 
                   if(threshold && ((threshold.above && values[1] > threshold.above) || (threshold.below && values[1] < threshold.below))){
-                    display[1].style('fill', 'red')
-                    text[1].style('fill', 'red')
+                    display[1].style('fill', '#ff2c2c')
+                    text[1].style('fill', '#ff2c2c')
                   } else {
                     display[1].style('fill', '#48cb8c')
                     text[1].style('fill', 'inherit')
@@ -459,14 +489,14 @@
               .attr('x', 0)
               .attr('y', 25)
               .attr('text-anchor', 'middle')
-              .attr('font-size', '0.4rem')
+              .attr('font-size', '0.5rem')
               .text(unit)
 
             svg.append('text')
               .attr('x', 0)
-              .attr('y', 45)
+              .attr('y', 36)
               .attr('text-anchor', 'middle')
-              .attr('font-size', '0.4rem')
+              .attr('font-size', '0.3rem')
               .text(title)
 
             return {
@@ -549,6 +579,24 @@
     update3()
     update4()
     update5()
+</script>
+<script type="text/javascript">
+  const
+    dom = {
+      controls: {
+        options: document.querySelectorAll('#controls .option'),
+        quicks: document.querySelectorAll('#controls .option .quick')
+      }
+    }
+
+  for(const control of dom.controls.options)
+    control.addEventListener('click', evt => {
+      for(quick of dom.controls.quicks)
+        quick.classList.toggle('open', false)
+
+      control.querySelector('.quick').classList.toggle('open', true)
+    })
+
 </script>
 <script type="text/javascript">
   const

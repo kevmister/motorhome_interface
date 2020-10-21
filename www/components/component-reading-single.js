@@ -1,6 +1,6 @@
 "use strict"
 
-class ComponentGaugeSingle extends Component {
+class ComponentReadingSingle extends Component {
   constructor() {
     super()
   }
@@ -24,40 +24,20 @@ class ComponentGaugeSingle extends Component {
         .attr('viewBox', `0 0 ${width} ${height}`)
         .append('g')
         .attr('transform', `translate(${width / 2},${height / 2})`),
-      arc = d3.arc()
-        .innerRadius(42)
-        .outerRadius(55)
-        .startAngle(convert(this.min)),
-      background = svg.append('path')
-        .classed('fill-shade', true)
-        .datum({ endAngle: convert(this.max)})
-        .attr('d', arc),
-      display = svg.append('path')
-        .datum({ endAngle: convert(this.min) })
-        .attr('d', arc),
+      textLength = `${round(this.value)} ${this.unit}`.length / 5,
       text  = svg.append('text')
         .attr('x', 0)
-        .attr('y', 5)
-        .attr('font-size', `${1.75-((`${round(this.max)}`).length/7)}rem`)
-        .attr('value', this.min)
-        .text(this.min)
+        .attr('y', 12)
+        .attr('font-size', `${2/(Math.pow(length, 2)+2)}rem`)
+        .attr('value', this.value)
         .attr('text-anchor', 'middle'),
-      unit = svg.append('text')
-        .attr('x', 0)
-        .attr('y', 22)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '0.5rem')
+      textValue = text.append('tspan')
+        .attr('font-size', '2.5em')
+        .text(round(this.value)),
+      textUnit = text.append('tspan')
+        .attr('font-size', '1em')
         .text(this.unit),
       tween = {
-        arc: value => d => {
-          const
-            interpolate = d3.interpolate(d.endAngle, convert(value))
-
-          return t => {
-            d.endAngle = interpolate(t)
-            return arc(d)
-          }
-        },
         text: value => d => {
           const
             interpolate = d3.interpolate((text.attr('value'))*1, value)
@@ -68,26 +48,24 @@ class ComponentGaugeSingle extends Component {
 
             text
               .attr('value', result)
-              .text(round(result))
+
+            textValue.text(round(result))
           }
         }
       },
       update = () => {
-        display.transition()
-          .duration(500)
-          .attrTween('d', tween.arc(this.value))
+        const
+          textLength = `${round(this.value)} ${this.unit}`.length / 5
 
         text.transition()
           .duration(500)
+          .attr('font-size', `${(2/(Math.pow(textLength, 2)+2))}rem`)
           .tween("text", tween.text(this.value))
 
         const
           bad = (this.thresholdAbove && this.value > this.thresholdAbove[0]) || (this.thresholdBelow && this.value < this.thresholdBelow[0]),
           ugly = (this.thresholdAbove && this.value > this.thresholdAbove[1]) || (this.thresholdBelow && this.value < this.thresholdBelow[1])
 
-        
-        display.classed('fill-highlight', bad && !ugly)
-        display.classed('fill-warn', ugly)
         text.classed('fill-highlight', bad && !ugly)
         text.classed('fill-warn', ugly)
       }
@@ -117,18 +95,6 @@ class ComponentGaugeSingle extends Component {
   get title(){
     return this.getAttribute('title')
   }
-  set min(value){
-    this.setAttribute('min', value)
-  }
-  get min(){
-    return this.getAttribute('min')
-  }
-  set max(value){
-    this.setAttribute('max', value)
-  }
-  get max(){
-    return this.getAttribute('max')
-  }
   set unit(value){
     this.setAttribute('unit', value)
   }
@@ -139,44 +105,37 @@ class ComponentGaugeSingle extends Component {
     this.setAttribute('step', value)
   }
   get step(){
-    return this.hasAttribute('step') ? this.getAttribute('step') : 1
+    return this.hasAttribute('step') ? this.getAttribute('step')*1 : 1
   }
   set digits(value){
     this.setAttribute('digits', value)
   }
   get digits(){
-    return this.hasAttribute('digits') ? this.getAttribute('digits') : 0
+    return this.hasAttribute('digits') ? this.getAttribute('digits')*1 : 0
   }
   set thresholdBelow(value){
     this.setAttribute('threshold-below', value.join(','))
   }
   get thresholdBelow(){
-    return this.hasAttribute('threshold-below') ? this.getAttribute('threshold-below').split(',') : null
+    return this.hasAttribute('threshold-below') ? this.getAttribute('threshold-below').split(',').map(value => value*1) : null
   }
   set thresholdAbove(value){
     this.setAttribute('threshold-above', value.join(','))
   }
   get thresholdAbove(){
-    return this.hasAttribute('threshold-above') ? this.getAttribute('threshold-above').split(',') : null
+    return this.hasAttribute('threshold-above') ? this.getAttribute('threshold-above').split(',').map(value => value*1) : null
   }
   set value(value){
     this.setAttribute('value', value)
     this.update()
   }
   get value(){
-    return this.getAttribute('value')
+    return this.getAttribute('value')*1
   }
-
-  /*
-  attributeChangedCallback(name,oldValue,newValue) {
-    if(name === 'value')
-      setValue(value)
-  }
-  */
 
   static get observedAttributes() {
-    return ['title', 'unit', 'min', 'max', 'step', 'digits', 'threshold-below', 'threshold-above', 'value']
+    return ['title', 'unit', 'step', 'digits', 'threshold-below', 'threshold-above', 'value']
   }
 
 }
-window.customElements.define('component-gauge-single', ComponentGaugeSingle)
+window.customElements.define('component-reading-single', ComponentReadingSingle)

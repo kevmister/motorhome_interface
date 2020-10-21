@@ -5,8 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script type="text/javascript" src="components/component.js"></script>
+  <script type="text/javascript" src="components/component-gauge-single.js"></script>
   <style type="text/css">
     :root{
+      --primary-background: #131822;
+      --primary-color: #54CBF1;
+      --primary-highlight: #E6AB2D;
+      --primary-warn: #E62D2D;
+      --primary-shade: #2F799A;
       --padding: 0.5rem;
       --controls-height: 6rem;
       --controls-quick-width: 40rem;
@@ -17,7 +25,8 @@
       font-family: 'Source Sans Pro', sans-serif;
       text-transform: uppercase;
       text-align: center;
-      background: #000;
+      background: var(--primary-background);
+      color: var(--primary-color);
     }
     html,body{
       margin: 0;
@@ -27,6 +36,26 @@
   </style>
 
   <style type="text/css"> /* DASHBOARD */
+    #grid{
+      --grid-gap: 0.2rem;
+      --grid-rows: 14;
+      --grid-columns: 20;
+      --grid-block-size: 2rem;
+      --grid-width: calc((var(--grid-columns) * var(--grid-block-size)) + ((var(--grid-columns) - 1) * var(--grid-gap)));
+      --grid-height: calc((var(--grid-rows) * var(--grid-block-size)) + ((var(--grid-rows) - 1) * var(--grid-gap)));
+      display: grid;
+      grid-gap: var(--grid-gap);
+      grid-template-columns: repeat(var(--grid-columns), var(--grid-block-size));
+      grid-template-rows: repeat(var(--grid-rows), var(--grid-block-size));
+      width: var(--grid-width);
+      height: var(--grid-height);
+      margin-left: calc(100vw / 2 - (var(--grid-width) / 2));
+      margin-top: calc(100vh / 2 - (var(--grid-height) / 2));
+      grid-template-areas: "special"
+    }
+    #grid.edit{
+
+    }
     #dashboard{
       position: absolute;
       left: var(--padding);
@@ -34,11 +63,9 @@
       top: var(--padding);
       bottom: calc(var(--controls-height));
       padding: var(--padding);
-      background: #eee;
       border-radius: var(--padding);
       transform: translateY(0);
       transition: transform var(--transition-speed);
-      color: #222;
     }
     body.parked #dashboard{
       transform: translateX(calc((var(--dashboard-width) * -1) + var(--padding) ));
@@ -66,7 +93,6 @@
       top: var(--padding);
       bottom: calc(var(--controls-height));
       padding: var(--padding);
-      background: #eee;
       border-radius: var(--padding);
       transition: left var(--transition-speed);
     }
@@ -84,7 +110,6 @@
       top: calc(100vh - var(--controls-height));
       bottom: var(--padding);
       padding: calc(var(--padding)*2);
-      background: #000;
     }
     #controls .option.start{
       border-left: 1pt solid #ccc;
@@ -99,7 +124,6 @@
       height: 100%;
       border-radius: var(--padding);
       padding: 0 var(--padding);
-      color: #eee;
       display: inline-grid;
       grid-template-areas: "upper" "title" "lower";
       grid-template-rows: 1fr 1fr 1fr;
@@ -160,6 +184,10 @@
   </style>
 </head>
 <body>
+  <div id="grid">
+    <component-gauge-single name="special" x="0" y="2" width="2" height="2" min="0" max="10" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="6,8"></component-gauge-single>
+  </div>
+  <!--
   <div id="dashboard">
     <div id="tachometer">
       <span id="tachometer-value">1100</span>
@@ -227,9 +255,58 @@
       <div class="quick"></div>
     </div>
   </div>
+-->
 </body>
-<script src="https://d3js.org/d3.v6.min.js"></script>
 <script type="text/javascript">
+
+  const
+    grid = {
+      element: document.querySelector('#grid'),
+      template: Array.from({ length: 20 }, (_) => Array.from({ length: 14 }, (_) => null)),
+      templateMapper: callback => grid.template.map((row,y) => row.map((column,x) => callback(x,y))),
+      components: {
+        special: ({
+          x: 0,
+          y: 2,
+          get mask() {
+            return grid.templateMapper((x,y) => this.x <= x && x < this.x+(this.element.getAttribute('width')*1||1) && this.y <= y && y < this.y+(this.element.getAttribute('height')*1||1))
+          }
+        })
+      },
+      update: () => {
+        const
+          components = grid.element.querySelectorAll(':scope>*'),
+          masks = [ ...components ].map(component => {
+            const
+              name = component.getAttribute('name'),
+              height = (component.getAttribute('height') || 1) * 1,
+              width = (component.getAttribute('width') || 1) * 1,
+              x = component.getAttribute('x') * 1,
+              y = component.getAttribute('y') * 1
+
+            return ({ 
+              name, 
+              mask: grid.templateMapper((xx,yy) => x <= xx && xx < x+(width*1) && y <= yy && yy < y+(height*1)) 
+            })
+          }),
+          gridTemplateAreas = grid.templateMapper((x,y) => {
+            const
+              found = masks.find(({ mask }) => mask[x][y])
+
+            return found ? found.name : '.'
+          }).map(row => `"${row.join(' ')}"`).join(' ')
+
+        grid.element.style.gridTemplateAreas = gridTemplateAreas
+      }
+    }
+
+  grid.update()
+
+  setInterval(() => {const e = document.querySelector('component-gauge-single'); e.value = Math.random()*e.max}, 1000)
+
+
+
+
   /*
     EASY THINGS TO CONTROL
       WIPERS
@@ -260,36 +337,36 @@
               svg = d3
                 .select(element)
                 .append('svg')
+                .classed('fill-color', true)
                 .attr('width', '100%')
                 .attr('height', '100%')
                 .attr('viewBox', `0 0 ${width} ${height}`)
                 .append('g')
                 .attr('transform', `translate(${width / 2},${height / 2})`),
               arc = d3.arc()
-                .innerRadius(40)
+                .innerRadius(42)
                 .outerRadius(55)
                 .startAngle(convert(min)),
-              background = svg.append('path')
+              backgroundElement = svg.append('path')
+                .classed('fill-shade', true)
                 .datum({ endAngle: convert(max)})
-                .style('fill', '#cccccc')
                 .attr('d', arc),
-              display = svg.append('path')
+              displayElement = svg.append('path')
                 .datum({ endAngle: convert(min) })
-                .style('fill', '#48cb8c')
                 .attr('d', arc),
-              /*
-              bar = svg.append('path')
-                .datum({ endAngle: convert(min)+0.01})
-                .style('fill', '#555')
-                .attr('d', arc),
-              */
-              text  = svg.append('text')
+              textElement  = svg.append('text')
                 .attr('x', 0)
                 .attr('y', 5)
                 .attr('font-size', `${1.75-((`${round(max)}`).length/7)}rem`)
                 .attr('value', min)
                 .text(min)
                 .attr('text-anchor', 'middle'),
+              unitElement = svg.append('text')
+                .attr('x', 0)
+                .attr('y', 22)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '0.5rem')
+                .text(unit),
               tween = {
                 arc: value => d => {
                   const
@@ -302,42 +379,37 @@
                 },
                 text: value => d => {
                   const
-                    interpolate = d3.interpolate((text.attr('value'))*1, value)
+                    interpolate = d3.interpolate((textElement.attr('value'))*1, value)
 
                   return t => {
                     const
                       result = interpolate(t)
 
-                    text
+                    textElement
                       .attr('value', result)
                       .text(round(result))
                   }
                 }
               },
               update = ({ value,duration=500 }) => {
-                display.transition()
+                displayElement.transition()
                   .duration(duration)
                   .attrTween('d', tween.arc(value))
 
-                text.transition()
+                textElement.transition()
                   .duration(duration)
                   .tween("text", tween.text(value))
 
-                if(threshold && ((threshold.above && value > threshold.above) || (threshold.below && value < threshold.below))){
-                  display.style('fill', '#ff2c2c')
-                  text.style('fill', '#ff2c2c')
-                } else {
-                  display.style('fill', '#48cb8c')
-                  text.style('fill', 'inherit')
-                }
-              }
+                const
+                  bad = threshold && ((threshold.above && value > threshold.above[0]) || (threshold.below && value < threshold.below[0])),
+                  ugly = threshold && ((threshold.above && value > threshold.above[1]) || (threshold.below && value < threshold.below[1]))
 
-            svg.append('text')
-              .attr('x', 0)
-              .attr('y', 22)
-              .attr('text-anchor', 'middle')
-              .attr('font-size', '0.5rem')
-              .text(unit)
+                
+                displayElement.classed('fill-highlight', bad && !ugly)
+                displayElement.classed('fill-warn', ugly)
+                textElement.classed('fill-highlight', bad && !ugly)
+                textElement.classed('fill-warn', ugly)
+              }
 
             svg.append('text')
               .attr('x', 0)
@@ -360,6 +432,7 @@
               svg = d3
                 .select(element)
                 .append('svg')
+                .classed('fill-color', true)
                 .attr('width', '100%')
                 .attr('height', '100%')
                 .attr('viewBox', `0 0 ${width} ${height}`)
@@ -367,47 +440,33 @@
                 .attr('transform', `translate(${width / 2},${height / 2})`),
               arc = [
                 d3.arc()
-                  .innerRadius(40)
+                  .innerRadius(42)
                   .outerRadius(55)
                   .startAngle(0),
                 d3.arc()
-                  .innerRadius(40)
+                  .innerRadius(42)
                   .outerRadius(55)
                   .startAngle(0)
               ],
-              background = [
+              backgroundElements = [
                 svg.append('path')
+                .classed('fill-shade', true)
                   .datum({ endAngle: -convert(max)})
-                  .style('fill', '#cccccc')
                   .attr('d', arc[0]),
                 svg.append('path')
+                .classed('fill-shade', true)
                   .datum({ endAngle: convert(max)})
-                  .style('fill', '#cccccc')
                   .attr('d', arc[1])
               ],
-              display = [
+              displayElements = [
                 svg.append('path')
                   .datum({ startAngle: 0, endAngle: -convert(min) })
-                  .style('fill', '#48cb8c')
                   .attr('d', arc),
                 svg.append('path')
                   .datum({ startAngle: 0, endAngle: convert(min) })
-                  .style('fill', '#48cb8c')
                   .attr('d', arc)
               ],
-              /*
-              bar = [
-                svg.append('path')
-                  .datum({ endAngle: convert(min)+0.005})
-                  .style('fill', '#555')
-                  .attr('d', arc[0]),
-                svg.append('path')
-                  .datum({ endAngle: convert(min)+0.005})
-                  .style('fill', '#555')
-                  .attr('d', arc[1])
-              ],
-              */
-              text = [
+              textElements = [
                 svg.append('text')
                   .attr('x', -5)
                   .attr('y', -10)
@@ -423,6 +482,12 @@
                   .text(min)
                   .attr('text-anchor', 'middle')
               ],
+              unitElement = svg.append('text')
+                .attr('x', 0)
+                .attr('y', 25)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '0.5rem')
+                .text(unit),
               tween = {
                 arc: (number,value) => d => {
                   const
@@ -435,62 +500,54 @@
                 },
                 text: (number,value) => d => {
                   const
-                    interpolate = d3.interpolate((text[number].attr('value'))*1, value)
+                    interpolate = d3.interpolate((textElements[number].attr('value'))*1, value)
 
                   return t => {
                     const
                       result = interpolate(t)
 
-                    text[number]
+                    textElements[number]
                       .attr('value', result)
                       .text(round(result))
                   }
                 }
               },
               update = ({ values,duration=500 }) => {
-                display[0].transition()
+                displayElements[0].transition()
                   .duration(duration)
                   .attrTween('d', tween.arc(0,-values[0]))
 
-                display[1].transition()
+                displayElements[1].transition()
                   .duration(duration)
                   .attrTween('d', tween.arc(1,values[1]))
 
-                text[0].transition()
+                textElements[0].transition()
                   .duration(duration)
                   .tween("text", tween.text(0,values[0]))
 
-                text[1].transition()
+                textElements[1].transition()
                   .duration(duration)
                   .tween("text", tween.text(1,values[1]))
-                  
-              
+                
+                const
+                  bad = [
+                    threshold && ((threshold.above && values[0] > threshold.above[0]) || (threshold.below && values[0] < threshold.below[0])),
+                    threshold && ((threshold.above && values[1] > threshold.above[0]) || (threshold.below && values[1] < threshold.below[0]))
+                  ],
+                  ugly = [
+                    threshold && ((threshold.above && values[0] > threshold.above[1]) || (threshold.below && values[0] < threshold.below[1])),
+                    threshold && ((threshold.above && values[1] > threshold.above[1]) || (threshold.below && values[1] < threshold.below[1]))
+                  ]
 
-                if(threshold){
-                  if(threshold && ((threshold.above && values[0] > threshold.above) || (threshold.below && values[0] < threshold.below))){
-                    display[0].style('fill', '#ff2c2c')
-                    text[0].style('fill', '#ff2c2c')
-                  } else {
-                    display[0].style('fill', '#48cb8c')
-                    text[0].style('fill', 'inherit')
-                  }
-
-                  if(threshold && ((threshold.above && values[1] > threshold.above) || (threshold.below && values[1] < threshold.below))){
-                    display[1].style('fill', '#ff2c2c')
-                    text[1].style('fill', '#ff2c2c')
-                  } else {
-                    display[1].style('fill', '#48cb8c')
-                    text[1].style('fill', 'inherit')
-                  }
-                }
+                displayElements[0].classed('fill-highlight', bad[0] && !ugly[0])
+                displayElements[1].classed('fill-highlight', bad[1] && !ugly[1])
+                displayElements[0].classed('fill-warn', ugly[0])
+                displayElements[1].classed('fill-warn', ugly[1])
+                textElements[0].classed('fill-highlight', bad[0] && !ugly[0])
+                textElements[1].classed('fill-highlight', bad[1] && !ugly[1])
+                textElements[0].classed('fill-warn', ugly[0])
+                textElements[1].classed('fill-warn', ugly[1])
               }
-
-            svg.append('text')
-              .attr('x', 0)
-              .attr('y', 25)
-              .attr('text-anchor', 'middle')
-              .attr('font-size', '0.5rem')
-              .text(unit)
 
             svg.append('text')
               .attr('x', 0)
@@ -510,10 +567,7 @@
         min: 0, 
         max: 150, 
         unit: 'PSI', 
-        threshold: {
-          above: 120,
-          below: 60
-        }, 
+        threshold: {}, 
         title: 'BAG PRESSURE'
       }),
       gauge2 = display.gauge.double({
@@ -522,8 +576,8 @@
         max: 100, 
         unit: '%', 
         threshold: {
-          below: 15
-        }, 
+          below: [25,15]
+        },
         title: 'MAIN | AUX FUEL'
       }),
       gauge3 = display.gauge.single({
@@ -532,8 +586,8 @@
         max: 250, 
         unit: 'PSI',
         threshold: {
-          below: 50,
-          above: 150
+          above: [150,200],
+          below: [100,50]
         }, 
         title: 'OIL PRESSURE'
       }),
@@ -545,8 +599,8 @@
         step: 0.1,
         digits: 1,
         threshold: {
-          below: 10,
-          above: 15
+          below: [10,8],
+          above: [15,16]
         }, 
         title: 'BATTERY VOLTAGE'
       }),
@@ -556,8 +610,8 @@
         max: 150, 
         unit: 'C',
         threshold: {
-          above: 110
-        }, 
+          above: [100,120]
+        },
         title: 'OIL TEMPERATURE'
       }),
       update1 = () => gauge1.update({ values: [ Math.random()*150|0, Math.random()*150|0 ], duration: 8000 / 10 }),

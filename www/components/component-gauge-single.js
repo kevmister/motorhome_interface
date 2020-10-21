@@ -97,6 +97,7 @@ class ComponentGaugeSingle extends Component {
       .attr('y', 36)
       .attr('text-anchor', 'middle')
       .attr('font-size', '0.35rem')
+      .attr('font-weight', 'bold')
       .text(this.title)
 
     this.update = update

@@ -1,6 +1,6 @@
 "use strict"
 
-class Component extends HTMLElement {
+class ComponentCore extends HTMLElement {
   constructor() {
     super()
     this.shadow = this.attachShadow({ mode: 'open' })

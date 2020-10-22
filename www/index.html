@@ -6,9 +6,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v6.min.js"></script>
-  <script type="text/javascript" src="components/component.js"></script>
-  <script type="text/javascript" src="components/component-gauge-single.js"></script>
-  <script type="text/javascript" src="components/component-reading-single.js"></script>
+  <script type="text/javascript" src="components/component-core.js"></script>
+  <script type="text/javascript" src="components/component-gauge.js"></script>
+  <script type="text/javascript" src="components/component-reading.js"></script>
   <style type="text/css">
     :root{
       --primary-background: #131822;
@@ -186,8 +186,8 @@
 </head>
 <body>
   <div id="grid">
-    <component-gauge-single name="special" x="0" y="2" width="2" height="2" min="0" max="10" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="6,8"></component-gauge-single>
-    <component-reading-single name="special2" x="0" y="4" width="2" height="2" min="0" max="10" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
+    <component-gauge-single name="special" x="0" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
+    <component-reading-single name="special2" x="2" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
   </div>
   <!--
   <div id="dashboard">
@@ -265,7 +265,7 @@
     grid = {
       element: document.querySelector('#grid'),
       template: Array.from({ length: 20 }, (_) => Array.from({ length: 14 }, (_) => null)),
-      templateMapper: callback => grid.template.map((row,y) => row.map((column,x) => callback(x,y))),
+      templateMapper: callback => grid.template.map((column,y) => column.map((row,x) => callback(x,y))),
       components: {
         special: ({
           x: 0,
@@ -293,10 +293,12 @@
           }),
           gridTemplateAreas = grid.templateMapper((x,y) => {
             const
-              found = masks.find(({ mask }) => mask[x][y])
+              found = masks.find(({ mask }) => mask[y][x])
 
             return found ? found.name : '.'
           }).map(row => `"${row.join(' ')}"`).join(' ')
+
+        console.log({ masks })
 
         grid.element.style.gridTemplateAreas = gridTemplateAreas
       }
@@ -304,8 +306,14 @@
 
   grid.update()
 
-  setInterval(() => {const e = document.querySelector('component-gauge-single'); e.value = Math.random()*e.max}, 1000)
-  setInterval(() => {const e = document.querySelector('component-reading-single'); e.value = Math.random()*200}, 1000)
+  setInterval(() => {
+    const
+      elements = document.querySelectorAll('component-gauge-single,component-reading-single'),
+      value = Math.random()*200|0
+
+    for(const element of elements)
+      element.value = value
+  }, 2000)
 
 
 

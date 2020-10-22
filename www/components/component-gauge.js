@@ -1,6 +1,6 @@
 "use strict"
 
-class ComponentGaugeSingle extends Component {
+class ComponentGaugeSingle extends ComponentCore {
   constructor() {
     super()
   }
@@ -14,7 +14,7 @@ class ComponentGaugeSingle extends Component {
       height = 120,
       range = this.max - this.min,
       round = value => (Math.round(Math.round(value/this.step)*this.step*100000)/100000).toFixed(this.digits),
-      convert = value => ((value - this.min) / range) * (Math.PI/0.75) - (Math.PI/1.5),
+      convert = value => ((Math.min(value, this.max) - this.min) / range) * (Math.PI/0.75) - (Math.PI/1.5),
       svg = d3
         .select(this.shadow)
         .append('svg')
@@ -121,13 +121,13 @@ class ComponentGaugeSingle extends Component {
     this.setAttribute('min', value)
   }
   get min(){
-    return this.getAttribute('min')
+    return this.getAttribute('min')*1
   }
   set max(value){
     this.setAttribute('max', value)
   }
   get max(){
-    return this.getAttribute('max')
+    return this.getAttribute('max')*1
   }
   set unit(value){
     this.setAttribute('unit', value)
@@ -139,25 +139,25 @@ class ComponentGaugeSingle extends Component {
     this.setAttribute('step', value)
   }
   get step(){
-    return this.hasAttribute('step') ? this.getAttribute('step') : 1
-  }
-  set digits(value){
-    this.setAttribute('digits', value)
+    return this.hasAttribute('step') ? this.getAttribute('step')*1 : 1
   }
   get digits(){
-    return this.hasAttribute('digits') ? this.getAttribute('digits') : 0
+    return this.hasAttribute('digits') ? this.getAttribute('digits')*1 : 0
+  }
+  get digits(){
+    return this.hasAttribute('digits') ? this.getAttribute('digits')*1 : 0
   }
   set thresholdBelow(value){
     this.setAttribute('threshold-below', value.join(','))
   }
   get thresholdBelow(){
-    return this.hasAttribute('threshold-below') ? this.getAttribute('threshold-below').split(',') : null
+    return this.hasAttribute('threshold-below') ? this.getAttribute('threshold-below').split(',').map(value => value*1) : null
   }
   set thresholdAbove(value){
     this.setAttribute('threshold-above', value.join(','))
   }
   get thresholdAbove(){
-    return this.hasAttribute('threshold-above') ? this.getAttribute('threshold-above').split(',') : null
+    return this.hasAttribute('threshold-above') ? this.getAttribute('threshold-above').split(',').map(value => value*1) : null
   }
   set value(value){
     this.setAttribute('value', value)

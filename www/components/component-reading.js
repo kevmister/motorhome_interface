@@ -1,6 +1,6 @@
 "use strict"
 
-class ComponentReadingSingle extends Component {
+class ComponentReadingSingle extends ComponentCore {
   constructor() {
     super()
   }
@@ -28,14 +28,13 @@ class ComponentReadingSingle extends Component {
       text  = svg.append('text')
         .attr('x', 0)
         .attr('y', 12)
-        .attr('font-size', `${2/(Math.pow(length, 2)+2)}rem`)
         .attr('value', this.value)
         .attr('text-anchor', 'middle'),
       textValue = text.append('tspan')
-        .attr('font-size', '2.5em')
+        .attr('font-size', `${(1/(Math.pow(textLength, 2)+1))*4}rem`)
         .text(round(this.value)),
       textUnit = text.append('tspan')
-        .attr('font-size', '1em')
+        .attr('font-size', '0.5rem')
         .text(this.unit),
       tween = {
         text: value => d => {
@@ -57,9 +56,9 @@ class ComponentReadingSingle extends Component {
         const
           textLength = `${round(this.value)} ${this.unit}`.length / 5
 
-        text.transition()
+        textValue.transition()
           .duration(500)
-          .attr('font-size', `${(2/(Math.pow(textLength, 2)+2))}rem`)
+          .attr('font-size', `${(1/(Math.pow(textLength, 2)+1))*4}rem`)
           .tween("text", tween.text(this.value))
 
         const
@@ -79,6 +78,8 @@ class ComponentReadingSingle extends Component {
       .text(this.title)
 
     this.update = update
+
+    console.log(this.offsetWidth)
   }
 
   updgradeProperty = property => {

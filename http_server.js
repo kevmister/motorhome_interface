@@ -56,6 +56,7 @@ const run  = async () => {
         await loader({ 
           directory,
           callback: async ({ dirpath,filepath,file }) => {
+            console.info(`Loading connector: ${filepath}`)
             const
               connector = await require(`${__dirname}/${filepath}`)(resources)
 
@@ -70,6 +71,7 @@ const run  = async () => {
         await loader({ 
           directory,
           callback: async ({ dirpath,filepath,file }) => {
+            console.info(`Loading job: ${filepath}`)
             const
               job = await require(`${__dirname}/${filepath}`)(resources)
 
@@ -83,7 +85,7 @@ const run  = async () => {
   resources.jobs = jobs
 
   await connectors.load()
-  //await jobs.load()
+  await jobs.load()
 
   wss.on('connection', async client => {
     client.on('message', async message => {

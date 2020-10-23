@@ -7,8 +7,6 @@ class ComponentReadingSingle extends ComponentCore {
   connectedCallback(){
     this.initializeShadow()
 
-    console.dir(this)
-
     const
       width = 120,
       height = 120,
@@ -23,18 +21,18 @@ class ComponentReadingSingle extends ComponentCore {
         .attr('height', '100%')
         .attr('viewBox', `0 0 ${width} ${height}`)
         .append('g')
-        .attr('transform', `translate(${width / 2},${height / 2})`),
+        .attr('transform', `translate(${width / 2},${height / 2 + 14})`),
       textLength = `${round(this.value)} ${this.unit}`.length / 5,
       text  = svg.append('text')
         .attr('x', 0)
-        .attr('y', 12)
+        .attr('y', 4)
         .attr('value', this.value)
         .attr('text-anchor', 'middle'),
       textValue = text.append('tspan')
-        .attr('font-size', `${(1/(Math.pow(textLength, 2)+1))*4}rem`)
+        .attr('font-size', `${(1/(Math.pow(textLength, 2)+1))*100}`)
         .text(round(this.value)),
       textUnit = text.append('tspan')
-        .attr('font-size', '0.5rem')
+        .attr('font-size', '12')
         .text(this.unit),
       tween = {
         text: value => d => {
@@ -58,7 +56,7 @@ class ComponentReadingSingle extends ComponentCore {
 
         textValue.transition()
           .duration(500)
-          .attr('font-size', `${(1/(Math.pow(textLength, 2)+1))*4}rem`)
+          .attr('font-size', `${(1/(Math.pow(textLength, 2)+1))*100}`)
           .tween("text", tween.text(this.value))
 
         const
@@ -73,13 +71,14 @@ class ComponentReadingSingle extends ComponentCore {
       .attr('x', 0)
       .attr('y', 36)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '0.35rem')
+      .attr('font-size', '10')
       .attr('font-weight', 'bold')
       .text(this.title)
 
-    this.update = update
+    svg.append('defs').html(this.filters)
+    svg.attr('filter', 'url(#glow)')
 
-    console.log(this.offsetWidth)
+    this.update = update
   }
 
   updgradeProperty = property => {

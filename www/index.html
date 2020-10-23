@@ -9,6 +9,7 @@
   <script type="text/javascript" src="components/component-core.js"></script>
   <script type="text/javascript" src="components/component-gauge.js"></script>
   <script type="text/javascript" src="components/component-reading.js"></script>
+  <script type="text/javascript" src="components/component-toggle.js"></script>
   <style type="text/css">
     :root{
       --primary-background: #131822;
@@ -16,12 +17,8 @@
       --primary-highlight: #E6AB2D;
       --primary-warn: #E62D2D;
       --primary-shade: #2F799A;
-      --padding: 0.5rem;
-      --controls-height: 6rem;
-      --controls-quick-width: 40rem;
-      --dashboard-width: 20rem;
-      --transition-speed: 0.5s;
-      font-size: 20pt;
+      --font-size: 20pt;
+      font-size: var(--font-size);
       -font-family: 'Varela Round', sans-serif;
       font-family: 'Source Sans Pro', sans-serif;
       text-transform: uppercase;
@@ -32,15 +29,15 @@
     html,body{
       margin: 0;
       padding: 0;
-      overflow: hidden;
+      -overflow: hidden;
     }
   </style>
 
   <style type="text/css"> /* DASHBOARD */
     #grid{
       --grid-gap: 0.2rem;
-      --grid-rows: 14;
-      --grid-columns: 20;
+      --grid-rows: 6;
+      --grid-columns: 6;
       --grid-block-size: 2rem;
       --grid-width: calc((var(--grid-columns) * var(--grid-block-size)) + ((var(--grid-columns) - 1) * var(--grid-gap)));
       --grid-height: calc((var(--grid-rows) * var(--grid-block-size)) + ((var(--grid-rows) - 1) * var(--grid-gap)));
@@ -57,214 +54,23 @@
     #grid.edit{
 
     }
-    #dashboard{
-      position: absolute;
-      left: var(--padding);
-      right: calc(100vw - var(--dashboard-width) + (var(--padding) * 1));
-      top: var(--padding);
-      bottom: calc(var(--controls-height));
-      padding: var(--padding);
-      border-radius: var(--padding);
-      transform: translateY(0);
-      transition: transform var(--transition-speed);
-    }
-    body.parked #dashboard{
-      transform: translateX(calc((var(--dashboard-width) * -1) + var(--padding) ));
-      transition: transform var(--transition-speed);
-    }
-    #tachometer-value{
-      font-size: 1.5rem;
-    }
-    #tachometer-unit{
-      font-size: 0.5rem;
-    }
-    #tachometer.red{
-      color: red;
-    }
-    #speedometer-value{
-      font-size: 3rem;
-    }
-  </style>
-
-  <style type="text/css"> /* WORKSPACE */
-    #workspace{
-      position: absolute;
-      left: calc(var(--dashboard-width) + (var(--padding) * 0));
-      right: var(--padding);
-      top: var(--padding);
-      bottom: calc(var(--controls-height));
-      padding: var(--padding);
-      border-radius: var(--padding);
-      transition: left var(--transition-speed);
-    }
-
-    body.parked #workspace{
-      left: var(--padding);
-      transition: left var(--transition-speed);
-    }
-  </style>
-  <style type="text/css"> /* NAVIGATION BUTTONS */
-    #controls{
-      position: absolute;
-      left: var(--padding);
-      right: var(--padding);
-      top: calc(100vh - var(--controls-height));
-      bottom: var(--padding);
-      padding: calc(var(--padding)*2);
-    }
-    #controls .option.start{
-      border-left: 1pt solid #ccc;
-      margin-left: calc(var(--padding) / 2);
-    }
-    #controls .option.end{
-      border-right: 1pt solid #ccc;
-      margin-right: calc(var(--padding) / 2);
-    }
-    #controls .option{
-      width: 4.5rem;
-      height: 100%;
-      border-radius: var(--padding);
-      padding: 0 var(--padding);
-      display: inline-grid;
-      grid-template-areas: "upper" "title" "lower";
-      grid-template-rows: 1fr 1fr 1fr;
-      font-size: 0.6rem;
-      border-left: 1pt solid #222;
-      border-right: 1pt solid #222;
-    }
-    #controls .upper{
-      grid-area: upper;
-    }
-    #controls .title{
-      grid-area: title;
-    }
-    #controls .lower{
-      grid-area: lower;
-    }
-    #controls .upper,
-    #controls .title,
-    #controls .lower{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #grid-layout>div{
-      display: block;
-      border-radius: var(--padding);
-      padding: var(--padding);
-    }
-    #controls .option .quick{
-      position: absolute;
-      bottom: var(--controls-height);
-      left: calc((100vw - var(--controls-quick-width)) / 2);
-      width: var(--controls-quick-width);
-      height: 10rem;
-      border-radius: var(--padding);
-      background: #eee;
-      box-shadow: 0 0 var(--padding) #000a;
-      transform-origin: bottom center;
-      transform: scale(0);
-      -transition: transform calc(var(--transition-speed) / 4);
-    }
-    #controls .option .quick.open{
-      transform: scale(1);
-      -transition: transform calc(var(--transition-speed) / 1);
-    }
-  </style>
-  <style type="text/css">
-    #dashboard-grid{
-      position: absolute;
-      bottom: 0;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-    }
-    .gauge{
-      width: 100%;
-      height: 100%;
-    }
   </style>
 </head>
 <body>
   <div id="grid">
     <component-gauge-single name="special" x="0" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
-    <component-reading-single name="special2" x="2" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
+    <component-gauge-double name="special1" x="2" y="0" width="2" height="2" min="0" max="200" value="0,0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-double>
+    <component-reading-single name="special2" x="4" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-reading-single>
+    <component-toggle name="special3" x="1" y="2" width="2" height="2" state="off" title="Home Light"></component-toggle>
+    <component-toggle-cycle name="special4" x="3" y="2" width="2" height="2" state="off" states="off,auto,slow,med,fast" title="Wiper Speed"></component-toggle-cycle>
   </div>
-  <!--
-  <div id="dashboard">
-    <div id="tachometer">
-      <span id="tachometer-value">1100</span>
-      <span id="tachometer-unit">RPM</span></div>
-    <div id="speedometer">
-      <span id="speedometer-value">75</span>
-      <span id="speedometer-unit">KM/H</span>
-    </div>
-    <div id="dashboard-grid">
-      <div class="gauge"></div>
-      <div class="gauge"></div>
-      <div class="gauge"></div>
-      <div class="gauge"></div>
-      <div class="gauge"></div>
-    </div>
-  </div>
-  <div id="workspace"></div>
-  <div id="controls">
-    <div class="option start">
-      <div class="upper"></div>
-      <div class="title">LIGHTS</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option">
-      <div class="upper"></div>
-      <div class="title">WIPERS</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option">
-      <div class="upper"></div>
-      <div class="title">CRUISE</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option end">
-      <div class="upper"></div>
-      <div class="title">SUSPENSION</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option start">
-      <div class="upper"></div>
-      <div class="title">HVAC</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option end">
-      <div class="upper"></div>
-      <div class="title">MUSIC</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option start">
-      <div class="upper"></div>
-      <div class="title">TV</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-    <div class="option end">
-      <div class="upper"></div>
-      <div class="title">HOME</div>
-      <div class="lower"></div>
-      <div class="quick"></div>
-    </div>
-  </div>
--->
 </body>
 <script type="text/javascript">
 
   const
     grid = {
       element: document.querySelector('#grid'),
-      template: Array.from({ length: 20 }, (_) => Array.from({ length: 14 }, (_) => null)),
+      template: Array.from({ length: 14 }, (_) => Array.from({ length: 14 }, (_) => null)),
       templateMapper: callback => grid.template.map((column,y) => column.map((row,x) => callback(x,y))),
       components: {
         special: ({
@@ -298,8 +104,6 @@
             return found ? found.name : '.'
           }).map(row => `"${row.join(' ')}"`).join(' ')
 
-        console.log({ masks })
-
         grid.element.style.gridTemplateAreas = gridTemplateAreas
       }
     }
@@ -308,11 +112,18 @@
 
   setInterval(() => {
     const
-      elements = document.querySelectorAll('component-gauge-single,component-reading-single'),
-      value = Math.random()*200|0
+      elementSingle = document.querySelectorAll('component-gauge-single,component-reading-single'),
+      elementDouble = document.querySelectorAll('component-gauge-double'),
+      elementToggle = document.querySelectorAll('component-toggle'),
+      elementToggleCycle = document.querySelectorAll('component-toggle-cycle'),
+      random = () => Math.random()*200|0
 
-    for(const element of elements)
-      element.value = value
+    for(const element of elementSingle)
+      element.value = random()
+
+    for(const element of elementDouble)
+      element.value = [random(),random()]
+
   }, 2000)
 
 
@@ -329,339 +140,7 @@
     THINGS TO CONSIDER
       DUAL FUEL TANK
   */
-  setInterval(() => {
-    //document.querySelector('body').classList.toggle('parked')
-  }, 5000)
-  ////////////////////////////////////////////////////////////////
-
-
-    const
-      display = {
-        gauge: {
-          single: ({ element,title,min=0,max=1,step=10,digits=0,threshold,unit }) => {
-            const
-              width = 120,
-              height = 120,
-              range = max - min,
-              round = value => (Math.round(Math.round(value/step)*step*100000)/100000).toFixed(digits),
-              convert = value => ((value - min) / range) * (Math.PI/0.75) - (Math.PI/1.5),
-              svg = d3
-                .select(element)
-                .append('svg')
-                .classed('fill-color', true)
-                .attr('width', '100%')
-                .attr('height', '100%')
-                .attr('viewBox', `0 0 ${width} ${height}`)
-                .append('g')
-                .attr('transform', `translate(${width / 2},${height / 2})`),
-              arc = d3.arc()
-                .innerRadius(42)
-                .outerRadius(55)
-                .startAngle(convert(min)),
-              backgroundElement = svg.append('path')
-                .classed('fill-shade', true)
-                .datum({ endAngle: convert(max)})
-                .attr('d', arc),
-              displayElement = svg.append('path')
-                .datum({ endAngle: convert(min) })
-                .attr('d', arc),
-              textElement  = svg.append('text')
-                .attr('x', 0)
-                .attr('y', 5)
-                .attr('font-size', `${1.75-((`${round(max)}`).length/7)}rem`)
-                .attr('value', min)
-                .text(min)
-                .attr('text-anchor', 'middle'),
-              unitElement = svg.append('text')
-                .attr('x', 0)
-                .attr('y', 22)
-                .attr('text-anchor', 'middle')
-                .attr('font-size', '0.5rem')
-                .text(unit),
-              tween = {
-                arc: value => d => {
-                  const
-                    interpolate = d3.interpolate(d.endAngle, convert(value))
-
-                  return t => {
-                    d.endAngle = interpolate(t)
-                    return arc(d)
-                  }
-                },
-                text: value => d => {
-                  const
-                    interpolate = d3.interpolate((textElement.attr('value'))*1, value)
-
-                  return t => {
-                    const
-                      result = interpolate(t)
-
-                    textElement
-                      .attr('value', result)
-                      .text(round(result))
-                  }
-                }
-              },
-              update = ({ value,duration=500 }) => {
-                displayElement.transition()
-                  .duration(duration)
-                  .attrTween('d', tween.arc(value))
-
-                textElement.transition()
-                  .duration(duration)
-                  .tween("text", tween.text(value))
-
-                const
-                  bad = threshold && ((threshold.above && value > threshold.above[0]) || (threshold.below && value < threshold.below[0])),
-                  ugly = threshold && ((threshold.above && value > threshold.above[1]) || (threshold.below && value < threshold.below[1]))
-
-                
-                displayElement.classed('fill-highlight', bad && !ugly)
-                displayElement.classed('fill-warn', ugly)
-                textElement.classed('fill-highlight', bad && !ugly)
-                textElement.classed('fill-warn', ugly)
-              }
-
-            svg.append('text')
-              .attr('x', 0)
-              .attr('y', 36)
-              .attr('text-anchor', 'middle')
-              .attr('font-size', '0.3rem')
-              .text(title)
-
-            return {
-              update
-            }
-          },
-          double: ({ element,title,min=0,max=1,step=1,digits=0,threshold,unit }) => {
-            const
-              width = 120,
-              height = 120,
-              range = max - min,
-              round = value => (Math.round(Math.round(value/step)*step*100000)/100000).toFixed(digits),
-              convert = value => ((value - min) / range) * (Math.PI/0.75) / 2,
-              svg = d3
-                .select(element)
-                .append('svg')
-                .classed('fill-color', true)
-                .attr('width', '100%')
-                .attr('height', '100%')
-                .attr('viewBox', `0 0 ${width} ${height}`)
-                .append('g')
-                .attr('transform', `translate(${width / 2},${height / 2})`),
-              arc = [
-                d3.arc()
-                  .innerRadius(42)
-                  .outerRadius(55)
-                  .startAngle(0),
-                d3.arc()
-                  .innerRadius(42)
-                  .outerRadius(55)
-                  .startAngle(0)
-              ],
-              backgroundElements = [
-                svg.append('path')
-                .classed('fill-shade', true)
-                  .datum({ endAngle: -convert(max)})
-                  .attr('d', arc[0]),
-                svg.append('path')
-                .classed('fill-shade', true)
-                  .datum({ endAngle: convert(max)})
-                  .attr('d', arc[1])
-              ],
-              displayElements = [
-                svg.append('path')
-                  .datum({ startAngle: 0, endAngle: -convert(min) })
-                  .attr('d', arc),
-                svg.append('path')
-                  .datum({ startAngle: 0, endAngle: convert(min) })
-                  .attr('d', arc)
-              ],
-              textElements = [
-                svg.append('text')
-                  .attr('x', -5)
-                  .attr('y', -10)
-                  .attr('font-size', `${1.4-((`${max}`).length/7)}rem`)
-                  .attr('value', min)
-                  .text(min)
-                  .attr('text-anchor', 'middle'),
-                svg.append('text')
-                  .attr('x', 5)
-                  .attr('y', 10)
-                  .attr('font-size', `${1.4-((`${round(max)}`).length/7)}rem`)
-                  .attr('value', min)
-                  .text(min)
-                  .attr('text-anchor', 'middle')
-              ],
-              unitElement = svg.append('text')
-                .attr('x', 0)
-                .attr('y', 25)
-                .attr('text-anchor', 'middle')
-                .attr('font-size', '0.5rem')
-                .text(unit),
-              tween = {
-                arc: (number,value) => d => {
-                  const
-                    interpolate = d3.interpolate(d.endAngle, convert(value))
-
-                  return t => {
-                    d.endAngle = interpolate(t)
-                    return arc[number](d)
-                  }
-                },
-                text: (number,value) => d => {
-                  const
-                    interpolate = d3.interpolate((textElements[number].attr('value'))*1, value)
-
-                  return t => {
-                    const
-                      result = interpolate(t)
-
-                    textElements[number]
-                      .attr('value', result)
-                      .text(round(result))
-                  }
-                }
-              },
-              update = ({ values,duration=500 }) => {
-                displayElements[0].transition()
-                  .duration(duration)
-                  .attrTween('d', tween.arc(0,-values[0]))
-
-                displayElements[1].transition()
-                  .duration(duration)
-                  .attrTween('d', tween.arc(1,values[1]))
-
-                textElements[0].transition()
-                  .duration(duration)
-                  .tween("text", tween.text(0,values[0]))
-
-                textElements[1].transition()
-                  .duration(duration)
-                  .tween("text", tween.text(1,values[1]))
-                
-                const
-                  bad = [
-                    threshold && ((threshold.above && values[0] > threshold.above[0]) || (threshold.below && values[0] < threshold.below[0])),
-                    threshold && ((threshold.above && values[1] > threshold.above[0]) || (threshold.below && values[1] < threshold.below[0]))
-                  ],
-                  ugly = [
-                    threshold && ((threshold.above && values[0] > threshold.above[1]) || (threshold.below && values[0] < threshold.below[1])),
-                    threshold && ((threshold.above && values[1] > threshold.above[1]) || (threshold.below && values[1] < threshold.below[1]))
-                  ]
-
-                displayElements[0].classed('fill-highlight', bad[0] && !ugly[0])
-                displayElements[1].classed('fill-highlight', bad[1] && !ugly[1])
-                displayElements[0].classed('fill-warn', ugly[0])
-                displayElements[1].classed('fill-warn', ugly[1])
-                textElements[0].classed('fill-highlight', bad[0] && !ugly[0])
-                textElements[1].classed('fill-highlight', bad[1] && !ugly[1])
-                textElements[0].classed('fill-warn', ugly[0])
-                textElements[1].classed('fill-warn', ugly[1])
-              }
-
-            svg.append('text')
-              .attr('x', 0)
-              .attr('y', 36)
-              .attr('text-anchor', 'middle')
-              .attr('font-size', '0.3rem')
-              .text(title)
-
-            return {
-              update
-            } 
-          }
-        }
-      },
-      gauge1 = display.gauge.double({
-        element: document.querySelectorAll('.gauge')[0], 
-        min: 0, 
-        max: 150, 
-        unit: 'PSI', 
-        threshold: {}, 
-        title: 'BAG PRESSURE'
-      }),
-      gauge2 = display.gauge.double({
-        element: document.querySelectorAll('.gauge')[1],
-        min: 0, 
-        max: 100, 
-        unit: '%', 
-        threshold: {
-          below: [25,15]
-        },
-        title: 'MAIN | AUX FUEL'
-      }),
-      gauge3 = display.gauge.single({
-        element: document.querySelectorAll('.gauge')[2],
-        min: 0, 
-        max: 250, 
-        unit: 'PSI',
-        threshold: {
-          above: [150,200],
-          below: [100,50]
-        }, 
-        title: 'OIL PRESSURE'
-      }),
-      gauge4 = display.gauge.single({
-        element: document.querySelectorAll('.gauge')[3],
-        min: 0, 
-        max: 20, 
-        unit: 'V',
-        step: 0.1,
-        digits: 1,
-        threshold: {
-          below: [10,8],
-          above: [15,16]
-        }, 
-        title: 'BATTERY VOLTAGE'
-      }),
-      gauge5 = display.gauge.single({
-        element: document.querySelectorAll('.gauge')[4],
-        min: 0, 
-        max: 150, 
-        unit: 'C',
-        threshold: {
-          above: [100,120]
-        },
-        title: 'OIL TEMPERATURE'
-      }),
-      update1 = () => gauge1.update({ values: [ Math.random()*150|0, Math.random()*150|0 ], duration: 8000 / 10 }),
-      update2 = () => gauge2.update({ values: [ Math.random()*100|0, Math.random()*100|0 ], duration: 20000 / 10}),
-      update3 = () => gauge3.update({ value: Math.random()*250|0, duration: 10000 / 10}),
-      update4 = () => gauge4.update({ value: Math.random()*20|0, duration: 10000 / 10}),
-      update5 = () => gauge5.update({ value: Math.random()*150|0, duration: 10000 / 10})
-
-
-      /*
-    setInterval(update1, 10000 / 10)
-    setInterval(update2, 30000 / 10)
-    setInterval(update3, 11000 / 10)
-    setInterval(update4, 11000 / 10)
-    */
-
-    update1()
-    update2()
-    update3()
-    update4()
-    update5()
-</script>
-<script type="text/javascript">
-  const
-    dom = {
-      controls: {
-        options: document.querySelectorAll('#controls .option'),
-        quicks: document.querySelectorAll('#controls .option .quick')
-      }
-    }
-
-  for(const control of dom.controls.options)
-    control.addEventListener('click', evt => {
-      for(quick of dom.controls.quicks)
-        quick.classList.toggle('open', false)
-
-      control.querySelector('.quick').classList.toggle('open', true)
-    })
-
+  
 </script>
 <script type="text/javascript">
   const

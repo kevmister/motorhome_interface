@@ -30,6 +30,7 @@ class ComponentToggle extends ComponentCore {
         .attr('cy', -5)
         .attr('r', 45)
         .attr('clip-path', 'url(#above-title)')
+        .attr('filter', !this.state ? '' : 'url(#glow)')
         .classed('fill-background', !this.state),
       text  = svg.append('text')
         .attr('x', 0)
@@ -37,18 +38,19 @@ class ComponentToggle extends ComponentCore {
         .attr('font-size', 30)
         .attr('font-weight', 'bold')
         .attr('text-anchor', 'middle')
+        .attr('filter', this.state ? '' : 'url(#glow)')
         .classed('fill-shade', !this.state)
         .classed('fill-background', this.state)
-        .attr('filter', this.state ? '' : 'url(#glow)')
         .text(this.state ? this.textOn : this.textOff),
       update = () => {
         background
+          .attr('filter', !this.state ? '' : 'url(#glow)')
           .classed('fill-background', !this.state)
 
         text
+          .attr('filter', this.state ? '' : 'url(#glow)')
           .classed('fill-shade', !this.state)
           .classed('fill-background', this.state)
-          .attr('filter', this.state ? '' : 'url(#glow)')
           .text(this.state ? this.textOn : this.textOff)
       }
 
@@ -141,18 +143,19 @@ class ComponentToggleCycle extends ComponentCore {
         .attr('font-size', 30)
         .attr('font-weight', 'bold')
         .attr('text-anchor', 'middle')
+        .attr('filter', this.state !== 'off' ? '' : 'url(#glow)')
         .classed('fill-shade', this.state === 'off')
         .classed('fill-background', this.state !== 'off')
-        .attr('filter', this.state !== 'off' ? '' : 'url(#glow)')
         .text(this.state),
       update = () => {
         background
+          .attr('filter', this.state === 'off' ? '' : 'url(#glow)')
           .classed('fill-background', this.state === 'off')
 
         text
+          .attr('filter', this.state !== 'off' ? '' : 'url(#glow)')
           .classed('fill-shade', this.state === 'off')
           .classed('fill-background', this.state !== 'off')
-          .attr('filter', this.state !== 'off' ? '' : 'url(#glow)')
           .text(this.state)
       }
 

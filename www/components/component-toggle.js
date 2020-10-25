@@ -8,8 +8,12 @@ class ComponentToggle extends ComponentCore {
     this.initializeShadow()
 
 
-    this.addEventListener('click', evt => {
+    this.addEventListener('action-primary', evt => {
+      console.log('action-primary')
       this.state = !this.state
+    })
+    this.addEventListener('action-secondary', evt => {
+      console.log('action-secondary')
     })
 
     const
@@ -113,9 +117,13 @@ class ComponentToggleCycle extends ComponentCore {
   }
   connectedCallback(){
     this.initializeShadow()
-
-    this.addEventListener('click', evt => {
+    
+    this.addEventListener('action-primary', evt => {
+      console.log('action-primary')
       this.state = this.states[this.states.indexOf(this.state)+1] || this.states[0]
+    })
+    this.addEventListener('action-secondary', evt => {
+      console.log('action-secondary')
     })
 
     const

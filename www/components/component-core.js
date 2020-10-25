@@ -58,5 +58,49 @@ class ComponentCore extends HTMLElement {
       </clipPath>
 
     `
+
+    this.customEvents = {
+      primary: new Event('action-primary'),
+      secondary: new Event('action-secondary'),
+      timeout: null,
+      begin: evt => {
+        evt.preventDefault()
+        if(this.customEvents.timeout)
+          clearTimeout(this.customEvents.timeout)
+
+        this.customEvents.timeout = setTimeout(() => {
+          this.customEvents.clear()
+          this.dispatchEvent(this.customEvents.secondary)
+        }, 750)
+      },
+      clear: evt => {
+        clearTimeout(this.customEvents.timeout)
+        this.customEvents.timeout = null
+      },
+      end: evt => {
+        evt.preventDefault()
+        if(this.customEvents.timeout){
+          this.customEvents.clear()
+          if(evt.button !== 2)
+            this.dispatchEvent(this.customEvents.primary)
+          else
+            this.dispatchEvent(this.customEvents.secondary)
+        }
+      }
+    }
+
+    
+    this.oncontextmenu  = evt => {
+      evt.preventDefault()
+      evt.stopPropagation()
+    }
+
+    this.addEventListener('mousedown', this.customEvents.begin)
+    this.addEventListener('touchstart', this.customEvents.begin)
+    this.addEventListener('mouseout', this.customEvents.clear)
+    this.addEventListener('mouseup', this.customEvents.end)
+    this.addEventListener('touchend', this.customEvents.end)
+    this.addEventListener('touchleave', this.customEvents.clear)
+    this.addEventListener('touchcancel', this.customEvents.end)
   }
 }

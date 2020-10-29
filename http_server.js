@@ -5,6 +5,7 @@ const run  = async () => {
     http = require('http'),
     express = require('express'),
     ws = require('ws'),
+    mqtt = require('mqtt'),
     app = express(),
     server = http.createServer(app),
     wss = new ws.Server({ server })
@@ -103,11 +104,29 @@ const run  = async () => {
     })
   })
 
+  const
+    client = mqtt.connect('mqtt://localhost')
+
+  client.on('connect', () => {
+    client.subscribe('motorhome/#')
+  })
+
+  client.on('message', (topic,message) => {
+    //console.log(`${topic}: ${message.toString()}`)
+
+    if(topic === 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/temperature'){
+      const
+        json = JSON.stringify({connector: 'air_suspension.js', path: 'sensors.accelerometer.temperature', data: { value: message.toString()*1 }})
+
+      for(const client of wss.clients)
+        if(client.readyState = ws.OPEN)
+          client.send(json)
+    }
+  })
+
   /*
   setInterval(() => {
-    for(const client of wss.clients)
-      if(client.readyState = ws.OPEN)
-        client.send(JSON.stringify({connector: 'air_suspension.js', path: 'data.bag_pressure.driver', data: { value: 90 }}))
+    
   }, 1000)
   */
 

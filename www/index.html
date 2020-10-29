@@ -63,6 +63,7 @@
     <component-reading-single name="special2" x="4" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-reading-single>
     <component-toggle name="special3" x="1" y="2" width="2" height="2" state="off" title="Home Light"></component-toggle>
     <component-toggle-cycle name="special4" x="3" y="2" width="2" height="2" state="off" states="off,auto,slow,med,fast" title="Wiper Speed"></component-toggle-cycle>
+    <component-gauge-single name="temperature" x="2" y="4" width="2" height="2" min="0" max="40" value="0" step="0.1" digits="1" title="TEMPERATURE" unit="C" threshold-above="30,32"></component-gauge-single>
   </div>
 </body>
 <script type="text/javascript">
@@ -124,7 +125,7 @@
     for(const element of elementDouble)
       element.value = [random(),random()]
 
-  }, 2000)
+  }, 10000000)
 
 
 
@@ -148,10 +149,10 @@
 
   connection.onmessage = message => {
     const
-      { namespace,data } = JSON.parse(message.data)
+      { connector,path,data } = JSON.parse(message.data)
 
-    if(namespace === 'engine.data.oil_pressure')
-      gauge3.update({ value: data.value })
+    if(connector === 'air_suspension.js' && path === 'sensors.accelerometer.temperature')
+      document.querySelector('component-gauge-single[name=temperature]').value = data.value
   }
 </script>
 </html>

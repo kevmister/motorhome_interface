@@ -6,7 +6,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400&display=swap" rel="stylesheet">
   <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script type="text/javascript" src="js/context-menu.js"></script>
   <script type="text/javascript" src="components/component-core.js"></script>
+  <script type="text/javascript" src="components/component-placeholder.js"></script>
   <script type="text/javascript" src="components/component-gauge.js"></script>
   <script type="text/javascript" src="components/component-reading.js"></script>
   <script type="text/javascript" src="components/component-toggle.js"></script>
@@ -17,6 +19,7 @@
       --primary-highlight: #E6AB2D;
       --primary-warn: #E62D2D;
       --primary-shade: #2F799A;
+      --primary-shade-darker: #1E4B62;
       --font-size: 20pt;
       font-size: var(--font-size);
       -font-family: 'Varela Round', sans-serif;
@@ -36,8 +39,8 @@
   <style type="text/css"> /* DASHBOARD */
     #grid{
       --grid-gap: 0.2rem;
-      --grid-rows: 6;
-      --grid-columns: 6;
+      --grid-rows: 10;
+      --grid-columns: 14;
       --grid-block-size: 2rem;
       --grid-width: calc((var(--grid-columns) * var(--grid-block-size)) + ((var(--grid-columns) - 1) * var(--grid-gap)));
       --grid-height: calc((var(--grid-rows) * var(--grid-block-size)) + ((var(--grid-rows) - 1) * var(--grid-gap)));
@@ -51,27 +54,46 @@
       margin-top: calc(100vh / 2 - (var(--grid-height) / 2));
       grid-template-areas: "special"
     }
-    #grid.edit{
-
+    #grid #components{
+      display: contents;
+    }
+    #grid #placeholders{
+      display: contents;
+    }
+    #context-menu{
+      position: absolute;
+      width: 8rem;
+      border: 1pt solid var(--primary-color);
     }
   </style>
 </head>
 <body>
   <div id="grid">
-    <component-gauge-single name="special" x="0" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
-    <component-gauge-double name="special1" x="2" y="0" width="2" height="2" min="0" max="200" value="0,0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-double>
-    <component-reading-single name="special2" x="4" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-reading-single>
-    <component-toggle name="special3" x="1" y="2" width="2" height="2" state="off" title="Home Light"></component-toggle>
-    <component-toggle-cycle name="special4" x="3" y="2" width="2" height="2" state="off" states="off,auto,slow,med,fast" title="Wiper Speed"></component-toggle-cycle>
-    <component-gauge-single name="temperature" x="2" y="4" width="2" height="2" min="0" max="40" value="0" step="0.1" digits="1" title="TEMPERATURE" unit="C" threshold-above="30,32"></component-gauge-single>
+    <div id="components">
+      <component-gauge-single name="special" x="0" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-single>
+      <component-gauge-double name="special1" x="2" y="0" width="2" height="2" min="0" max="200" value="0,0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-gauge-double>
+      <component-reading-single name="special2" x="4" y="0" width="2" height="2" min="0" max="200" value="0" title="OIL PRESSURE" unit="PSI" threshold-above="100,140"></component-reading-single>
+      <component-toggle name="special3" x="1" y="2" width="2" height="2" state="off" title="Home Light"></component-toggle>
+      <component-toggle-cycle name="special4" x="3" y="2" width="2" height="2" state="off" states="off,auto,slow,med,fast" title="Wiper Speed"></component-toggle-cycle>
+      <component-gauge-single name="temperature" x="2" y="4" width="2" height="2" min="0" max="40" value="0" step="0.1" digits="1" title="TEMPERATURE" unit="C" threshold-above="30,32"></component-gauge-single>
+      <component-gauge-single name="angle_x" x="1" y="6" width="2" height="2" min="-45" max="45" value="0" step="0.1" digits="1" title="TILT" unit=""></component-gauge-single>
+      <component-gauge-single name="angle_y" x="3" y="6" width="2" height="2" min="-45" max="45" value="0" step="0.1" digits="1" title="ROLL" unit=""></component-gauge-single>
+    </div>
+    <div id="placeholders"></div>
   </div>
+  <div id="context-menu"></div>
 </body>
 <script type="text/javascript">
-
   const
     grid = {
-      element: document.querySelector('#grid'),
-      template: Array.from({ length: 14 }, (_) => Array.from({ length: 14 }, (_) => null)),
+      elements: {
+        grid: document.querySelector('#grid'),
+        components: document.querySelector('#grid #components'),
+        placeholders: document.querySelector('#grid #placeholders')
+      },
+      width: 14,
+      height: 10,
+      get template(){ return Array.from({ length: grid.height }, (_) => Array.from({ length: grid.width }, (_) => null)) },
       templateMapper: callback => grid.template.map((column,y) => column.map((row,x) => callback(x,y))),
       components: {
         special: ({
@@ -84,7 +106,7 @@
       },
       update: () => {
         const
-          components = grid.element.querySelectorAll(':scope>*'),
+          components = grid.elements.components.querySelectorAll(':scope>*'),
           masks = [ ...components ].map(component => {
             const
               name = component.getAttribute('name'),
@@ -98,19 +120,36 @@
               mask: grid.templateMapper((xx,yy) => x <= xx && xx < x+(width*1) && y <= yy && yy < y+(height*1)) 
             })
           }),
-          gridTemplateAreas = grid.templateMapper((x,y) => {
+          gridTemplateMasksAssigned = grid.templateMapper((x,y) => {
             const
               found = masks.find(({ mask }) => mask[y][x])
 
-            return found ? found.name : '.'
-          }).map(row => `"${row.join(' ')}"`).join(' ')
+            return {
+              x,
+              y,
+              found: found ? found.name : null
+            }
+          }),
+          gridTemplateAreas = gridTemplateMasksAssigned
+            .map(row => `"${row.map(({ found }) => found || '.').join(' ')}"`).join(' '),
+          placeholders = gridTemplateMasksAssigned
+            .map(row => row.map(({ x,y,found }) => found ? '' : `<component-placeholder style="grid-column: ${x+1} / span 1; grid-row: ${y+1} / span 1;"></component-placeholder>`).join('')).join('')
 
-        grid.element.style.gridTemplateAreas = gridTemplateAreas
+
+        grid.elements.grid.style.gridTemplateAreas = gridTemplateAreas
+        grid.elements.placeholders.innerHTML = placeholders
       }
     }
 
+  fetch('readings.json')
+    .then(response => response.json())
+    .then(data => console.log(data))
+
+
+
   grid.update()
 
+/*
   setInterval(() => {
     const
       elementSingle = document.querySelectorAll('component-gauge-single,component-reading-single'),
@@ -126,6 +165,7 @@
       element.value = [random(),random()]
 
   }, 10000000)
+*/
 
 
 
@@ -151,8 +191,14 @@
     const
       { connector,path,data } = JSON.parse(message.data)
 
-    if(connector === 'air_suspension.js' && path === 'sensors.accelerometer.temperature')
-      document.querySelector('component-gauge-single[name=temperature]').value = data.value
+    if(connector === 'air_suspension.js'){
+      if(path === 'sensors/accelerometer/temperature')
+        document.querySelector('component-gauge-single[name=temperature]').value = data.value
+      if(path === 'sensors/accelerometer/angle_x')
+        document.querySelector('component-gauge-single[name=angle_x]').value = data.value
+      if(path === 'sensors/accelerometer/angle_y')
+        document.querySelector('component-gauge-single[name=angle_y]').value = data.value
+    }
   }
 </script>
 </html>

@@ -13,10 +13,9 @@ class ComponentCore extends HTMLElement {
       <style>
         :host{
           display: block;
-          -background: var(--primary-color);
           width: 100%;
           height: 100%;
-          grid-area: ${this.getAttribute('name')};
+          ${this.hasAttribute('name') ? `grid-area: ${this.getAttribute('name')};` : ''}
           transition: fill 500ms;
           user-select: none;
         }
@@ -36,9 +35,37 @@ class ComponentCore extends HTMLElement {
           fill: var(--primary-shade);
           transition: fill 500ms;
         }
+        .fill-shade-darker{
+          fill: var(--primary-shade-darker);
+          transition: fill 500ms;
+        }
         .fill-warn{
           fill: var(--primary-warn);
           transition: fill 500ms;
+        }
+        .stroke-color{
+          stroke: var(--primary-color);
+          transition: stroke 500ms;
+        }
+        .stroke-background{
+          stroke: var(--primary-background);
+          transition: stroke 500ms;
+        }
+        .stroke-highlight{
+          stroke: var(--primary-highlight);
+          transition: stroke 500ms;
+        }
+        .stroke-shade{
+          stroke: var(--primary-shade);
+          transition: stroke 500ms;
+        }
+        .stroke-shade-darker{
+          stroke: var(--primary-shade-darker);
+          transition: stroke 500ms;
+        }
+        .stroke-warn{
+          stroke: var(--primary-warn);
+          transition: stroke 500ms;
         }
       </style>
     `

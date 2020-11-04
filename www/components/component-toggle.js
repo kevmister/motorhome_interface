@@ -9,11 +9,17 @@ class ComponentToggle extends ComponentCore {
 
 
     this.addEventListener('action-primary', evt => {
-      console.log('action-primary')
       this.state = !this.state
     })
     this.addEventListener('action-secondary', evt => {
-      console.log('action-secondary')
+      window.motorhome.contextMenu({
+        options: [
+          {
+            text: 'Move',
+            callback: () => {}
+          }
+        ]
+      })
     })
 
     const

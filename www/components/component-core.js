@@ -18,6 +18,7 @@ class ComponentCore extends HTMLElement {
           ${this.hasAttribute('name') ? `grid-area: ${this.getAttribute('name')};` : ''}
           transition: fill 500ms;
           user-select: none;
+          text-shadow: none;
         }
         .fill-color{
           fill: var(--primary-color);

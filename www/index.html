@@ -28,11 +28,37 @@
       text-align: center;
       background: var(--primary-background);
       color: var(--primary-color);
+      text-shadow: 0 0 0.2rem var(--primary-color);
+      user-select: none;
     }
     html,body{
       margin: 0;
       padding: 0;
       -overflow: hidden;
+    }
+    .text-background{
+      color: var(--primary-background);
+      text-shadow: 0 0 0.2rem var(--primary-background);
+    }
+    .text-color{
+      color: var(--primary-color);
+      text-shadow: 0 0 0.2rem var(--primary-color);
+    }
+    .text-highlight{
+      color: var(--primary-highlight);
+      text-shadow: 0 0 0.2rem var(--primary-highlight);
+    }
+    .text-warn{
+      color: var(--primary-warn);
+      text-shadow: 0 0 0.2rem var(--primary-warn);
+    }
+    .text-shade{
+      color: var(--primary-shade);
+      text-shadow: 0 0 0.2rem var(--primary-shade);
+    }
+    .text-shade-darker{
+      color: var(--primary-shade-darker);
+      text-shadow: 0 0 0.2rem var(--primary-shade-darker);
     }
   </style>
 
@@ -62,8 +88,27 @@
     }
     #context-menu{
       position: absolute;
-      width: 8rem;
+      width: 6rem;
       border: 1pt solid var(--primary-color);
+      background: var(--primary-background);
+      font-size: 0.4rem;
+    }
+    #context-menu ul{
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+    #context-menu li.title{
+      font-size: 0.6rem;
+    }
+    #context-menu li{
+      display: block;
+      border-bottom: 1pt solid var(--primary-shade);
+      padding: 0.5rem;
+    }
+    #context-menu li:last-child{
+      display: block;
+      border-bottom: none;
     }
   </style>
 </head>
@@ -81,7 +126,7 @@
     </div>
     <div id="placeholders"></div>
   </div>
-  <div id="context-menu"></div>
+  <div id="context-menu"><ul></ul></div>
 </body>
 <script type="text/javascript">
   const

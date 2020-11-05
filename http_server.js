@@ -14,21 +14,19 @@ const run  = async () => {
 
   const
     fs = require('fs').promises,
-    loader = async ({ directory,callback }) => {
+    loader = async ({ directory,path='',callback }) => {
       const
-        dirpath = `${directory}`,
-        files = await fs.readdir(dirpath)
+        files = await fs.readdir(`${directory}/${path}`)
 
       for(const file of files){
         const
-          filepath = `${dirpath}/${file}`,
-          stat = await fs.lstat(filepath)
+          stat = await fs.lstat(`${directory}/${path}/${file}`)
 
         if(stat.isFile())
-          await callback({ dirpath,filepath,file })
+          await callback({ directory,path,file,filename: file.substr(0, file.lastIndexOf('.')) })
 
         if(stat.isDirectory())
-          await loader({ directory: filepath, callback })
+          await loader({ directory, path: `${path}${file}/`, callback })
       }
     },
     resources = {
@@ -36,7 +34,7 @@ const run  = async () => {
       connectors: null,
       jobs: null,
       shared: {
-        transmit: async ({ connector, path, data={} }) => {
+        transmit: async ({ connector, path='', data={} }) => {
           for(const client of wss.clients)
             if(client.readyState = ws.OPEN)
               client.send(JSON.stringify({connector, path, data, client: null }))
@@ -56,12 +54,12 @@ const run  = async () => {
       load: async ({ directory='connectors' }={}) => {
         await loader({ 
           directory,
-          callback: async ({ dirpath,filepath,file }) => {
-            console.info(`Loading connector: ${filepath}`)
+          callback: async ({ directory,path,file,filename }) => {
+            console.info(`Loading connector: ${path}${file}`)
             const
-              connector = await require(`${__dirname}/${filepath}`)(resources)
+              connector = await require(`${__dirname}/${directory}/${path}/${file}`)(resources)
 
-            connectors.loaded[filepath.substring(directory.length+1)] = connector
+            connectors.loaded[`${path}${filename}`] = connector
           }
         })
       }
@@ -71,12 +69,12 @@ const run  = async () => {
       load: async ({ directory='jobs' }={}) => {
         await loader({ 
           directory,
-          callback: async ({ dirpath,filepath,file }) => {
-            console.info(`Loading job: ${filepath}`)
+          callback: async ({ directory,path,file,filename }) => {
+            console.info(`Loading job: ${path}${file}`)
             const
-              job = await require(`${__dirname}/${filepath}`)(resources)
+              job = await require(`${__dirname}/${directory}/${path}/${file}`)(resources)
 
-            jobs.loaded[filepath.substring(directory.length+1)] = job
+            jobs.loaded[`${path}${filename}`] = job
           }
         })
       }
@@ -100,15 +98,12 @@ const run  = async () => {
   wss.on('connection', async client => {
     client.on('message', async message => {
       const
-        { connector, path, data={} } = JSON.parse(message.data)
+        { connector, path, data={} } = JSON.parse(message.data),
+        connectorData = { connector, path, data, client }
 
       for(connector of Object.keys(connectors.loaded))
-        if(typeof connector.receive === 'function')
-          await connector.receive({ connector, path, data, client })
-
-      for(job of Object.keys(jobs.loaded))
-        if(typeof job.receive === 'function')
-          await job.receive({ connector, path, data, client })
+        if('client' in connector && 'receive' in connector.client)
+          await connector.client.receive(connectorData)
 
     })
   })
@@ -120,49 +115,21 @@ const run  = async () => {
     client.subscribe('motorhome/#')
   })
 
-  client.on('message', (topic,message) => {
-    //console.log(`${topic}: ${message.toString()}`)
+  client.on('message', (topic,messageRaw) => {
     const
-      broadcast =  ({ json }) => {
-        for(const client of wss.clients)
-          if(client.readyState = ws.OPEN)
-            client.send(json)
-      },
-      elements = topic.split('/'),
-      namespace = elements[1]
+      message = messageRaw.toString(),
+      connectorData = { topic,message },
+      clientData = JSON.stringify({ connector: 'mqtt', path: topic, data: { message } })
 
+    for(const connector of Object.values(connectors.loaded))
+      if('mqtt' in connector)
+        connector.mqtt(connectorData)
 
-    if(topic === 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/temperature'){
-      const
-        json = JSON.stringify({connector: 'air_suspension.js', path: 'sensors/accelerometer/temperature', data: { value: message.toString()*1 }})
+    for(const client of wss.clients)
+      if(client.readyState = ws.OPEN)
+        client.send(clientData)
 
-      broadcast({ json })
-    }
-    if(topic === 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/angle_x'){
-      const
-        json = JSON.stringify({connector: 'air_suspension.js', path: 'sensors/accelerometer/angle_x', data: { value: message.toString()*1 }})
-
-      broadcast({ json })
-    }
-    if(topic === 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/angle_y'){
-      const
-        json = JSON.stringify({connector: 'air_suspension.js', path: 'sensors/accelerometer/angle_y', data: { value: message.toString()*1 }})
-
-      broadcast({ json })
-    }
-    if(topic === 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/angle_z'){
-      const
-        json = JSON.stringify({connector: 'air_suspension.js', path: 'sensors/accelerometer/angle_z', data: { value: message.toString()*1 }})
-
-      broadcast({ json })
-    }
   })
-
-  /*
-  setInterval(() => {
-    
-  }, 1000)
-  */
 
   server.listen(1974, () => console.info(`Server listening on port ${1974}`))
 }

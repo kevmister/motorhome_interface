@@ -8,7 +8,8 @@ module.exports = async resources => {
         path: 'motorhome/engine/air_suspension/outbound/',
         sensors: [
           {
-            path: 'sensors/accelerometer/acceleration_x',
+            connector: 'mqtt',
+            path: 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/angle_x',
             title: 'VEHICLE PITCH',
             unit: '°',
             min: -30,
@@ -16,23 +17,35 @@ module.exports = async resources => {
             step: 0.1
           },
           {
-            path: 'sensors/accelerometer/acceleration_y',
+            connector: 'mqtt',
+            path: 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/angle_y',
             title: 'VEHICLE ROLL',
             unit: '°',
             min: -30,
             max: 30,
             step: 0.1
+          },
+          {
+            connector: 'mqtt',
+            path: 'motorhome/engine/air_suspension/outbound/sensors/accelerometer/temperature',
+            title: 'AIR SUSPENSION TEMPERATURE',
+            unit: '°C',
+            min: -30,
+            max: 50
           }
         ],
         controls: []
       })
     },
-    receive = async ({ path, data, client }) => {
-      
+    client = {
+      receive: async ({ path, data, client }) => {
+        
+      } 
     }
+    
 
   return {
     render,
-    receive
+    client
   }
 }
